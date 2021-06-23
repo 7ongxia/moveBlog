@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup, Comment
 from datetime import datetime
-import time
+import urllib.request
 import webbrowser
 import requests
 import json
+import time
 
 
 class Tistory:  
@@ -56,14 +57,19 @@ class Tistory:
     
     def post_image(self, image):
         url = "https://www.tistory.com/apis/post/attach"
+        urllib.request.urlretrieve(image, "tistory.jpg")
+        
+        image = open('tistory.jpg', 'rb')
         file = {'uploadedfile': image}
         data = {
             'access_token': f'{self.accessToken}',
             'output': f'{self.outputType}',
             'blogName': f'{self.blogName}'
         }
-        response = requests.post(url, data=data, files=file).json()
-        print(json.dumps(response, indent=4, sort_keys=True))
+        response = requests.post(url, data=data, files=file)
+        item = json.loads(response.text)
+        imgUrl = item['tistory']['replacer'].replace("\"", "\"\"")
+        return imgUrl
 
 
 def getEgloosPost(i, tistory):
@@ -72,8 +78,6 @@ def getEgloosPost(i, tistory):
 
     # 날짜
     s = soup.select('.published')[0].text
-    # timestamp = time.mktime(datetime.strptime(s, "%Y/%m/%d %H:%M").timetuple())
-    # print(timestamp)
 
     # 본문 (HTML)
     content = soup.find_all("div", {'class':'hentry'})[0]
@@ -83,6 +87,12 @@ def getEgloosPost(i, tistory):
         div.decompose()
     for comments in content.findAll(text=lambda text:isinstance(text, Comment)):
         comments.extract()
+    
+    # 이미지
+    source = soup.find_all("div", attrs={'style': 'text-align:center'})
+    for div in source:
+        newImg = BeautifulSoup(f"<p>{tistory.post_image(div.find('img').get('src'))}</p>", 'html.parser')
+        div.replaceWith(newImg)
 
     # 제목
     body = soup.select('.hentry')[0].get_text('\n\n')[:-20]
@@ -90,19 +100,10 @@ def getEgloosPost(i, tistory):
     if title[:2] == '20':
         title = body.split('\n', 1)[0]
     title = f"{s[:10]} {title}"
-    # print(f"{i}: {title}")
-
-    # 이미지
-    images = []
-    source = soup.find_all("img", {"class": "image_mid"})
-    for img in source:
-        images.append(img.get("src"))
-    # print(f"images: {images}", '\n')
 
     return {
         'title': title,
         'body': body,
-        'image': images,
         'content': content
     }
 
@@ -115,10 +116,3 @@ if __name__ == "__main__":
         time.sleep(1)
         tistory.post_write(title=post['title'], content=post['content'])
         time.sleep(1)
-
-    # post = getEgloosPost(35, tistory)
-    # tistory.post_write(title=post['title'], content=post['content'])
-    # print(post['content'])
-
-
-# TODO: Image uploading function
