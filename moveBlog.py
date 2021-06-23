@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup, Comment
-from datetime import datetime
+from decouple import config
 import urllib.request
 import webbrowser
 import requests
@@ -10,11 +10,11 @@ import time
 class Tistory:  
     def __init__(self):  
         self.outputType = "json"
-        self.blogName = "SECRET"
+        self.blogName = config('blogName')
 
-        client_id = "SECRET"
-        Secret_Key = "SECRET"
-        redirect_uri = "https://SECRET"
+        client_id = config('client_id')
+        Secret_Key = config('Secret_Key')
+        redirect_uri = config('redirect_uri')
         state_param = "RandomString"
 
         auth_url = f"https://www.tistory.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&state={state_param}"
@@ -43,7 +43,7 @@ class Tistory:
 
     def post_write(self, title, content):
         url = "https://www.tistory.com/apis/post/write"
-        categoryId = "SECRET"
+        categoryId = config('redirect_uri')
         data = {
             'access_token': f'{self.accessToken}',
             'output': f'{self.outputType}',
@@ -73,7 +73,7 @@ class Tistory:
 
 
 def getEgloosPost(i, tistory):
-    req = requests.get(f"http://SECRET/page/{i}")
+    req = requests.get(f"{config('egloosUrl')}/page/{i}")
     soup = BeautifulSoup(req.text, 'html.parser')
 
     # 날짜

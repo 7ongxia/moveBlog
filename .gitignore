@@ -1,2 +1,4 @@
 /moveBlog
 *.jpg
+.env
+.DS_Store
