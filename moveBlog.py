@@ -111,8 +111,8 @@ def getEgloosPost(i, tistory):
 if __name__ == "__main__":
     tistory = Tistory()
 
-    for i in range(1, 151):
-        post = getEgloosPost(i)
+    for i in range(150, 0, -1):
+        post = getEgloosPost(i, tistory)
         time.sleep(1)
         tistory.post_write(title=post['title'], content=post['content'])
         time.sleep(1)
